@@ -36,7 +36,7 @@ Bell Team One Git Repository.
 * Press the check in the top left corner.
 * Press Sync.
 
-#### Checking for changes
+#### Checking for/Getting changes
 * Press CTRL+Shift+P.
 * Type: git fetch.
 * Go to the Source Control tab on the left.
