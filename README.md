@@ -37,7 +37,10 @@ Bell Team One Git Repository.
 * Press Sync.
 
 #### Checking for changes
-* Run the fetch.bat file.
+* Press CTRL+Shift+P.
+* Type: git fetch.
+* Go to the Source Control tab on the left.
+* Press Sync.
 
 ## Help
 
