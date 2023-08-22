@@ -27,6 +27,7 @@ Bell Team One Git Repository.
 * After you download and run VS Code the open window should have an option: **Clone Git Repository...** 
 * Click it and paste the following link: https://github.com/Aias0/BELL_2023-2024.git
 * Choose where you want the project to be stored locally.
+* Add Python and VS Code to PATH
 
 ### How to use
 
