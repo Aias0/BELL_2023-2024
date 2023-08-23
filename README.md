@@ -28,8 +28,8 @@ Bell Team One Git Repository.
 * Click it and paste the following link: https://github.com/Aias0/BELL_2023-2024.git
 * Choose where you want the project to be stored locally.
 * Add Python and VS Code to PATH
-   * System Properties-Advanced-Enivromental Variables-Path-New
-   * Add your VS Code bin folder and python folder
+    * System Properties-Advanced-Enivromental Variables-Path-New
+    * Add your VS Code bin folder and python folder
 
 ### How to use
 
