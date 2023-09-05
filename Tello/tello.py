@@ -1,37 +1,52 @@
 import time, cv2
+import keyboard
 from threading import Thread
 from djitellopy import Tello
 
 tello = Tello()
-
 tello.connect()
-
-keepRecording = True
 tello.streamon()
-frame_read = tello.get_frame_read()
 
-def videoRecorder():
-    # create a VideoWrite object, recoring to ./video.avi
-    height, width, _ = frame_read.frame.shape
-    video = cv2.VideoWriter('video.avi', cv2.VideoWriter_fourcc(*'XVID'), 30, (width, height))
+global img
+running = True
 
-    while keepRecording:
-        video.write(frame_read.frame)
-        time.sleep(1 / 30)
+# Video
+def video():
+    while running:
+        img = tello.get_frame_read().frame
+        img = cv2.resize(img, (360, 240))
+        cv2.imshow("Image", img)
+        cv2.waitKey(1)
+        
+# Input
+def tello_input():
+    while running:
+        if keyboard.is_pressed('space'):
+            tello.emergency()
+            print('Emergency stop')
+            time.sleep(2)
+        if keyboard.is_pressed('q'):
+            exit()
+            
+# Create and run threads for input and video
+Thread(target=video).start()
+Thread(target=tello_input).start()
 
-    video.release()
-
-# we need to run the recorder in a seperate thread, otherwise blocking options
-#  would prevent frames from getting added to the video
-recorder = Thread(target=videoRecorder)
-recorder.start()
-
-
-tello.takeoff()
-tello.move_up(100)
-tello.move_forward(100)
-tello.rotate_counter_clockwise(360)
+print(f'Battery: {tello.get_battery()}%')
+# Movement commands
+""" tello.takeoff()
+time.sleep(1)
+tello.move_up(100) # 192+10
+tello.move_forward(500)
+tello.move_forward(120)
+tello.rotate_clockwise(180)
+tello.move_down(20)
+tello.move_left(178)
+time.sleep(1)
+print('scan')
+tello.move_right(178)
+tello.move_up(20)
+tello.move_forward(490)
 tello.land()
 
-keepRecording = False
-recorder.join()
+running = False """
