@@ -1,7 +1,7 @@
 from djitellopy import Tello
 import math
 
-class Field(Tello):
+class Bell_Tello(Tello):
     def __init__(self, length: int, width: int, height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
         super().__init__()
         self.length = length

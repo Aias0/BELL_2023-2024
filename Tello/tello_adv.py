@@ -1,12 +1,11 @@
 import time, cv2
 import keyboard
 from threading import Thread
-from djitellopy import Tello
 import numpy as np
-from field_move import Field
+from bell_tello import Bell_Tello
 from data import *
 
-tello = Field(472, 170, 200, (180, 116, 0), (231, 116, 20), HAZARD_LIST)
+tello = Bell_Tello(472, 170, 200, (180, 116, 0), (231, 116, 20), HAZARD_LIST)
 tello.connect()
 tello.streamon()
 
