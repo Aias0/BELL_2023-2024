@@ -1,5 +1,7 @@
 from djitellopy import Tello
 import math, sys, logging
+logging.getLogger().addHandler(logging.StreamHandler())
+logging.basicConfig(filename='error.log', filemode='w', format='%(asctime)d-%(levelname)s-%(message)s', level=logging.DEBUG)
 
 class Bell_Tello(Tello):
     def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
@@ -14,8 +16,6 @@ class Bell_Tello(Tello):
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
-        
-        logging.basicConfig(level=logging.DEBUG)
     
     def move_pos(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
         for axis in order:
