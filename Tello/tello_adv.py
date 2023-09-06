@@ -2,6 +2,7 @@ import time, cv2
 import keyboard
 from threading import Thread
 from djitellopy import Tello
+import numpy as np
 from field_move import Field
 from data import *
 
@@ -18,7 +19,8 @@ def video():
     while running:
         img = tello.get_frame_read().frame
         img = cv2.resize(img, (360, 240))
-        cv2.imshow("Image", img)
+        cv2.imshow("Video Feed", img)
+        cv2.putText(img, f'Battery: {tello.get_battery()}% | Position: {tello.get_pos()}', (10,500), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
         cv2.waitKey(1)
         
 # Input
