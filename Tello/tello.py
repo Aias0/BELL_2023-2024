@@ -2,10 +2,13 @@ import time, cv2
 import keyboard
 from threading import Thread
 from djitellopy import Tello
+from field_move import Field
+from data import *
 
-tello = Tello()
+tello = Field(472, 170, 200, (180, 116, 0), (231, 116, 20), HAZARD_LIST)
 tello.connect()
 tello.streamon()
+
 
 global img
 running = True
@@ -33,10 +36,11 @@ Thread(target=video).start()
 Thread(target=tello_input).start()
 
 print(f'Battery: {tello.get_battery()}%')
+
 # Movement commands
-""" tello.takeoff()
+tello.takeoff()
 time.sleep(1)
-tello.move_up(100) # 192+10
+tello.move_up(100) #Set to 202 for compititon
 tello.move_forward(500)
 tello.move_forward(120)
 tello.rotate_clockwise(180)
@@ -49,4 +53,4 @@ tello.move_up(20)
 tello.move_forward(490)
 tello.land()
 
-running = False """
+running = False
