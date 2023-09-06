@@ -1,5 +1,5 @@
 from djitellopy import Tello
-import math
+import math, sys, logging
 
 class Bell_Tello(Tello):
     def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
@@ -14,6 +14,8 @@ class Bell_Tello(Tello):
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
+        
+        logging.basicConfig(level=logging.DEBUG)
     
     def move_pos(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
         for axis in order:
@@ -31,11 +33,11 @@ class Bell_Tello(Tello):
                         elif move_x <= -20:
                             self.move_back(int(abs(move_x)))
                         else:
-                            print(f'[error] ({self.current_pos} -> {pos} on x axis) move less than 20')
+                            logging.error(f'[error] ({self.current_pos} -> {pos} on x axis) move less than 20')
                     else:
-                        print(f'[error] ({self.current_pos} -> {pos} on x axis) path ends in a hazard')
+                        logging.critical(f'[error] ({self.current_pos} -> {pos} on x axis) path ends in a hazard')
                 else:
-                    print(f'[error] ({self.current_pos} -> {pos} on x axis) postiton out of bounds')
+                    logging.warning(f'[error] ({self.current_pos} -> {pos} on x axis) postiton out of bounds')
             if axis == 'y':
                 raw_move_y = pos[1] - self.current_pos[1]
                 if 0 < self.current_pos[1] + raw_move_y < self.field_length:
@@ -50,11 +52,11 @@ class Bell_Tello(Tello):
                         elif move_y <= -20:
                             self.move_right(int(abs(move_y)))
                         else:
-                            print(f'[error] ({self.current_pos} -> {pos} on y axis) move less than 20')
+                            logging.error(f'[error] ({self.current_pos} -> {pos} on y axis) move less than 20')
                     else:
-                        print(f'[error] ({self.current_pos} -> {pos} on y axis) path ends in a hazard')
+                        logging.critical(f'[error] ({self.current_pos} -> {pos} on y axis) path ends in a hazard')
                 else:
-                    print(f'[error] ({self.current_pos} -> {pos} on y axis) postiton out of bounds')
+                    logging.warning(f'[error] ({self.current_pos} -> {pos} on y axis) postiton out of bounds')
             if axis == 'z':
                 raw_move_z = pos[2] - self.current_pos[2]
                 if 0 < self.current_pos[2] + raw_move_z < self.field_length:
@@ -69,11 +71,11 @@ class Bell_Tello(Tello):
                         elif move_z <= -20:
                             self.move_down(int(abs(move_z)))
                         else:
-                            print(f'[error] ({self.current_pos} -> {pos} on z axis) move less than 20')
+                            logging.error(f'[error] ({self.current_pos} -> {pos} on z axis) move less than 20')
                     else:
-                        print(f'[error] ({self.current_pos} -> {pos} on z axis) path ends in a hazard')
+                        logging.critical(f'[error] ({self.current_pos} -> {pos} on z axis) path ends in a hazard')
                 else:
-                    print(f'[error] ({self.current_pos} -> {pos} on z axis) postiton out of bounds')
+                    logging.warning(f'[error] ({self.current_pos} -> {pos} on z axis) postiton out of bounds')
                     
     def move_posS(self, postitions: list):
         for pos in postitions:
