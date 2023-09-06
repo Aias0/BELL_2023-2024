@@ -2,10 +2,9 @@ import time, cv2
 import keyboard
 from threading import Thread
 from djitellopy import Tello
-from field_move import Field
 from data import *
 
-tello = Field(472, 170, 200, (180, 116, 0), (231, 116, 20), HAZARD_LIST)
+tello = Tello()
 tello.connect()
 tello.streamon()
 
