@@ -42,6 +42,20 @@ print(f'Battery: {tello.get_battery()}%')
 
 # Movement commands
 tello.takeoff()
+time.sleep(1)
+
+tello.move_posS([
+    (404, 125, 106), # Move to top of highest building on right
+    ((424, 85, 90), ('x', 'y', 'z')), # Move to scanning position
+])
+tello.rotate_clockwise(180)
+
+print('scan')
+
+tello.move_pos(
+    (424, 85, 90) # Move to top of highest building on right
+)
+tello.land_pad()
 
 
 running = False

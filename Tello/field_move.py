@@ -10,7 +10,7 @@ class Field(Tello):
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
-        self.current_pos = start_pos
+        self.current_pos = start_pos + self.__cm_inch(80)
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
     
@@ -67,13 +67,22 @@ class Field(Tello):
                             print('[error] move less than 20')
                 else:
                     print('[error] postiton out of bounds')
+                    
+    def move_posS(self, postitions: list):
+        for pos in postitions:
+            if 1 < len(pos):
+                self.move_pos(pos[0], pos[1])
+            else:
+                self.move_pos(pos)
             
     def land_pad(self):
         self.move_pos(self.end_pos)
         self.land()
 
-    def get_pos(self):
+    def get_pos(self) -> tuple:
         return self.current_pos
     
-    def __inch_cm(self, inch):
+    def __inch_cm(self, inch) -> float:
         return inch * 2.54
+    def __cm_inch(self, cm) -> float:
+        return cm / 2.54
