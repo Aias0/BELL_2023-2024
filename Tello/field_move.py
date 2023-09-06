@@ -10,7 +10,8 @@ class Field(Tello):
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
-        self.current_pos = start_pos + self.__cm_inch(80)
+        self.current_pos = (start_pos[0], start_pos[1] + self.__cm_inch(80))
+        self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
     
@@ -18,10 +19,10 @@ class Field(Tello):
         for axis in order:
             if axis == 'x':
                 raw_move_x = pos[0] - self.current_pos[0]
-                if (0 < self.current_pos[0] + raw_move_x < self.length) and (self.current_pos[2] > [hazard[2] for hazard in self.hazards]):
+                if 0 < self.current_pos[0] + raw_move_x < self.length:
                     can_move = True
                     for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1]:
+                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
                             can_move = False
                     move_x = self.__inch_cm(raw_move_x)
                     if can_move:
@@ -31,14 +32,16 @@ class Field(Tello):
                             self.move_back(int(abs(move_x)))
                         else:
                             print('[error] move less than 20')
+                    else:
+                        print('[error] path ends in a hazard')
                 else:
                     print('[error] postiton out of bounds')
             if axis == 'y':
                 raw_move_y = pos[1] - self.current_pos[1]
-                if (0 < self.current_pos[1] + raw_move_y < self.length) and (self.current_pos[2] > [hazard[2] for hazard in self.hazards]):
+                if 0 < self.current_pos[1] + raw_move_y < self.length:
                     can_move = True
                     for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1]:
+                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
                             can_move = False
                     move_y = self.__inch_cm(raw_move_y)
                     if can_move:
@@ -48,14 +51,16 @@ class Field(Tello):
                             self.move_right(int(abs(move_y)))
                         else:
                             print('[error] move less than 20')
+                    else:
+                        print('[error] path ends in a hazard')
                 else:
                     print('[error] postiton out of bounds')
             if axis == 'z':
                 raw_move_z = pos[2] - self.current_pos[2]
-                if (0 < self.current_pos[2] + raw_move_z < self.length) and (self.current_pos[2] > [hazard[2] for hazard in self.hazards]):
+                if 0 < self.current_pos[2] + raw_move_z < self.length:
                     can_move = True
                     for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1]:
+                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
                             can_move = False
                     move_z = self.__inch_cm(raw_move_z)
                     if can_move:
@@ -65,6 +70,8 @@ class Field(Tello):
                             self.move_down(int(abs(move_z)))
                         else:
                             print('[error] move less than 20')
+                    else:
+                        print('[error] path ends in a hazard')
                 else:
                     print('[error] postiton out of bounds')
                     
@@ -78,9 +85,24 @@ class Field(Tello):
     def land_pad(self):
         self.move_pos(self.end_pos)
         self.land()
-
+    
     def get_pos(self) -> tuple:
         return self.current_pos
+    def get_direction(self) -> str:
+        dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
+        card_direction = round(self.direction / (360. / len(dirs)))
+        return (self.direction, card_direction)
+    
+    def rotate_clockwise(self, x: int):
+        self.direction += x
+        if self.direction > 360:
+            self.direction - 360
+        return super().rotate_clockwise(x)
+    def rotate_counter_clockwise(self, x: int):
+        self.direction -= x
+        if self.direction < 0:
+            self.direction += 360
+        return super().rotate_counter_clockwise(x)
     
     def __inch_cm(self, inch) -> float:
         return inch * 2.54
