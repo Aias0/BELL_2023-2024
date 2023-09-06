@@ -19,7 +19,7 @@ def video():
         img = tello.get_frame_read().frame
         img = cv2.resize(img, (360, 240))
         cv2.imshow("Video Feed", img)
-        cv2.putText(img, f'Battery: {tello.get_battery()}% | Position: {tello.get_pos()} | Direction: {tello.get_direction()}', (10,500), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
+        cv2.putText(img, f'Battery: {tello.get_battery()}% | Position: {tello.get_pos()} | Direction: {tello.get_direction()[1]} | {tello.get_direction()[0]}°', (10,500), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
         cv2.waitKey(1)
         
 # Input

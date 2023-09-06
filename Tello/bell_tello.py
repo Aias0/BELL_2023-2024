@@ -2,11 +2,11 @@ from djitellopy import Tello
 import math
 
 class Bell_Tello(Tello):
-    def __init__(self, length: int, width: int, height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
+    def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
         super().__init__()
-        self.length = length
-        self.width = width
-        self.height = height
+        self.field_length = field_length
+        self.field_width = field_width
+        self.field_height = field_height
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
@@ -19,7 +19,7 @@ class Bell_Tello(Tello):
         for axis in order:
             if axis == 'x':
                 raw_move_x = pos[0] - self.current_pos[0]
-                if 0 < self.current_pos[0] + raw_move_x < self.length:
+                if 0 < self.current_pos[0] + raw_move_x < self.field_length:
                     can_move = True
                     for hazard in self.hazards:
                         if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
@@ -31,14 +31,14 @@ class Bell_Tello(Tello):
                         elif move_x <= -20:
                             self.move_back(int(abs(move_x)))
                         else:
-                            print('[error] move less than 20')
+                            print(f'[error] ({self.current_pos} -> {pos} on x axis) move less than 20')
                     else:
-                        print('[error] path ends in a hazard')
+                        print(f'[error] ({self.current_pos} -> {pos} on x axis) path ends in a hazard')
                 else:
-                    print('[error] postiton out of bounds')
+                    print(f'[error] ({self.current_pos} -> {pos} on x axis) postiton out of bounds')
             if axis == 'y':
                 raw_move_y = pos[1] - self.current_pos[1]
-                if 0 < self.current_pos[1] + raw_move_y < self.length:
+                if 0 < self.current_pos[1] + raw_move_y < self.field_length:
                     can_move = True
                     for hazard in self.hazards:
                         if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
@@ -50,14 +50,14 @@ class Bell_Tello(Tello):
                         elif move_y <= -20:
                             self.move_right(int(abs(move_y)))
                         else:
-                            print('[error] move less than 20')
+                            print(f'[error] ({self.current_pos} -> {pos} on y axis) move less than 20')
                     else:
-                        print('[error] path ends in a hazard')
+                        print(f'[error] ({self.current_pos} -> {pos} on y axis) path ends in a hazard')
                 else:
-                    print('[error] postiton out of bounds')
+                    print(f'[error] ({self.current_pos} -> {pos} on y axis) postiton out of bounds')
             if axis == 'z':
                 raw_move_z = pos[2] - self.current_pos[2]
-                if 0 < self.current_pos[2] + raw_move_z < self.length:
+                if 0 < self.current_pos[2] + raw_move_z < self.field_length:
                     can_move = True
                     for hazard in self.hazards:
                         if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
@@ -69,11 +69,11 @@ class Bell_Tello(Tello):
                         elif move_z <= -20:
                             self.move_down(int(abs(move_z)))
                         else:
-                            print('[error] move less than 20')
+                            print(f'[error] ({self.current_pos} -> {pos} on z axis) move less than 20')
                     else:
-                        print('[error] path ends in a hazard')
+                        print(f'[error] ({self.current_pos} -> {pos} on z axis) path ends in a hazard')
                 else:
-                    print('[error] postiton out of bounds')
+                    print(f'[error] ({self.current_pos} -> {pos} on z axis) postiton out of bounds')
                     
     def move_posS(self, postitions: list):
         for pos in postitions:
