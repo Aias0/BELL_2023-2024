@@ -10,7 +10,6 @@ LOG_NUM += 1
 with open('data.py', 'r+') as f:
     f.write(f'LOG_NUM = {LOG_NUM}')
 
-
 class Bell_Tello(Tello):
     def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
         super().__init__()
@@ -36,21 +35,16 @@ class Bell_Tello(Tello):
         relative_pos = self.__inch_cm(tuple(map(lambda i, j: i - j, pos, self.current_pos)))
         self.can_fly = True
         flight_path = Geometry3D.Segment(Geometry3D.Point(list(self.current_pos)), Geometry3D.Point(list(pos)))
-        a = Geometry3D.Point(0, 0, 0)
-        b = Geometry3D.Point(self.field_length, 0, 0)
-        c = Geometry3D.Point(0, self.field_width, 0)
-        d = Geometry3D.Point(self.field_length, self.field_width, 0)
-        e = Geometry3D.Point(0, 0, self.field_height)
-        f = Geometry3D.Point(self.field_length, 0, self.field_height)
-        g = Geometry3D.Point(0, self.field_width, self.field_height)
-        h = Geometry3D.Point(self.field_length, self.field_width, self.field_height)
-        field_face0 = Geometry3D.ConvexPolygon((a, b, c, d))
-        field_face1 = Geometry3D.ConvexPolygon((a, b, f, e))
-        field_face2 = Geometry3D.ConvexPolygon((a, c, g, e))
-        field_face3 = Geometry3D.ConvexPolygon((c, d, h, g))
-        field_face4 = Geometry3D.ConvexPolygon((b, d, h, f))
-        field_face5 = Geometry3D.ConvexPolygon((e, f, h, g))
-        field = Geometry3D.ConvexPolyhedron((field_face0,field_face1,field_face2,field_face3,field_face4,field_face5))
+        field = self.geo3D_rect(
+            (0, 0, 0),
+            (self.field_length, 0, 0),
+            (0, self.field_width, 0),
+            (self.field_length, self.field_width, 0),
+            (0, 0, self.field_height),
+            (self.field_length, 0, self.field_height),
+            (0, self.field_width, self.field_height),
+            (self.field_length, self.field_width, self.field_height)
+        )
         if not Geometry3D.intersection(Geometry3D.Point(list(pos)), field):
             can_fly = False
             logging.warning(f'({self.current_pos} -> {pos}) Results in tello moving out of bounds, comand canceled.')
@@ -115,6 +109,23 @@ class Bell_Tello(Tello):
         elif type(cm) is tuple:
             return (self.__inch_cm(cm[0]), self.__inch_cm(cm[1]), self.__inch_cm(cm[2]))
         return None
+    
+    def geo3D_rect(a: tuple, b: tuple, c: tuple, d: tuple, e: tuple, f: tuple, g: tuple, h: tuple):
+        a = Geometry3D.Point(list(a))
+        b = Geometry3D.Point(list(b))
+        c = Geometry3D.Point(list(c))
+        d = Geometry3D.Point(list(d))
+        e = Geometry3D.Point(list(e))
+        f = Geometry3D.Point(list(f))
+        g = Geometry3D.Point(list(g))
+        h = Geometry3D.Point(list(h))
+        field_face0 = Geometry3D.ConvexPolygon((a, b, c, d))
+        field_face1 = Geometry3D.ConvexPolygon((a, b, f, e))
+        field_face2 = Geometry3D.ConvexPolygon((a, c, g, e))
+        field_face3 = Geometry3D.ConvexPolygon((c, d, h, g))
+        field_face4 = Geometry3D.ConvexPolygon((b, d, h, f))
+        field_face5 = Geometry3D.ConvexPolygon((e, f, h, g))
+        return Geometry3D.ConvexPolyhedron((field_face0,field_face1,field_face2,field_face3,field_face4,field_face5))
     
     # Methods Deprecated    
     def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
