@@ -1,4 +1,4 @@
-import time, cv2
+import cv2, time
 import keyboard
 from threading import Thread
 from djitellopy import Tello

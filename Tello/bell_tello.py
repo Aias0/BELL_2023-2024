@@ -1,96 +1,73 @@
 from djitellopy import Tello
-import math, sys, logging
+import numpy as np
+import matplotlib.pyplot as plt
+import math, sys, os, logging, datetime, ladybug_geometry, Geometry3D
+from data import *
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+logging.basicConfig(filename=f'Logs\Log{LOG_NUM}_{datetime.date.isoformat(datetime.date.today())}_{datetime.datetime.now().strftime("%H-%M-%S")}.log', filemode='w', format='%(asctime)s-%(levelname)s-%(message)s', level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler())
-logging.basicConfig(filename='error.log', filemode='w', format='%(asctime)d-%(levelname)s-%(message)s', level=logging.DEBUG)
+LOG_NUM += 1
+with open('data.py', 'r+') as f:
+    f.write(f'LOG_NUM = {LOG_NUM}')
+
 
 class Bell_Tello(Tello):
     def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
         super().__init__()
+        logging.debug('init')
         self.field_length = field_length
         self.field_width = field_width
         self.field_height = field_height
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
-        self.current_pos = (start_pos[0], start_pos[1] + self.__cm_inch(80))
+        self.current_pos = (start_pos[0], start_pos[1] + int(self.__cm_inch(80)), start_pos[2]) # Make sure to account for takeoff height
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
+        self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
+ 
+    def move_pos_line(self, pos: tuple, speed: int = 50):
+        """ Move Tello to position in 3D space. Moves in a line. Will not move if flight path intersects a hazard or ends out of bounds. Speed is in cm/s
+        Arguments:
+            speed: 10-100"""
+        relative_pos = self.__inch_cm(tuple(map(lambda i, j: i - j, pos, self.current_pos)))
+        self.can_fly = True
+        print('test')
+        flight_path = Geometry3D.Segment(Geometry3D.Point(self.current_pos), Geometry3D.Point(pos))
+        field = Geometry3D.ConvexPolygon((Geometry3D.Point(0, 0, 0), Geometry3D.Point(self.field_length, 0, 0), Geometry3D.Point(0, self.field_width, 0), Geometry3D.Point(0, 0, self.field_height), Geometry3D.Point(self.field_length, self.field_width, self.field_height)))
+        if not Geometry3D.intersection(Geometry3D.Point(pos), field):
+            can_fly = False
+        for hazard in self.hazards:
+            if Geometry3D.intersection(flight_path, Geometry3D.Cylinder(hazard[0], hazard[1], hazard[2])):
+                can_fly = False
+        if can_fly:
+            self.go_xyz_speed(relative_pos[0], relative_pos[1], relative_pos[2], speed)
+            self.current_pos = pos
+        
     
-    def move_pos(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
-        for axis in order:
-            if axis == 'x':
-                raw_move_x = pos[0] - self.current_pos[0]
-                if 0 < self.current_pos[0] + raw_move_x < self.field_length:
-                    can_move = True
-                    for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
-                            can_move = False
-                    move_x = self.__inch_cm(raw_move_x)
-                    if can_move:
-                        if move_x >= 20:
-                            self.move_forward(int(move_x))
-                        elif move_x <= -20:
-                            self.move_back(int(abs(move_x)))
-                        else:
-                            logging.error(f'[error] ({self.current_pos} -> {pos} on x axis) move less than 20')
-                    else:
-                        logging.critical(f'[error] ({self.current_pos} -> {pos} on x axis) path ends in a hazard')
-                else:
-                    logging.warning(f'[error] ({self.current_pos} -> {pos} on x axis) postiton out of bounds')
-            if axis == 'y':
-                raw_move_y = pos[1] - self.current_pos[1]
-                if 0 < self.current_pos[1] + raw_move_y < self.field_length:
-                    can_move = True
-                    for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
-                            can_move = False
-                    move_y = self.__inch_cm(raw_move_y)
-                    if can_move:
-                        if move_y >= 20:
-                            self.move_left(int(move_y))
-                        elif move_y <= -20:
-                            self.move_right(int(abs(move_y)))
-                        else:
-                            logging.error(f'[error] ({self.current_pos} -> {pos} on y axis) move less than 20')
-                    else:
-                        logging.critical(f'[error] ({self.current_pos} -> {pos} on y axis) path ends in a hazard')
-                else:
-                    logging.warning(f'[error] ({self.current_pos} -> {pos} on y axis) postiton out of bounds')
-            if axis == 'z':
-                raw_move_z = pos[2] - self.current_pos[2]
-                if 0 < self.current_pos[2] + raw_move_z < self.field_length:
-                    can_move = True
-                    for hazard in self.hazards:
-                        if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
-                            can_move = False
-                    move_z = self.__inch_cm(raw_move_z)
-                    if can_move:
-                        if move_z >= 20:
-                            self.move_up(int(move_z))
-                        elif move_z <= -20:
-                            self.move_down(int(abs(move_z)))
-                        else:
-                            logging.error(f'[error] ({self.current_pos} -> {pos} on z axis) move less than 20')
-                    else:
-                        logging.critical(f'[error] ({self.current_pos} -> {pos} on z axis) path ends in a hazard')
-                else:
-                    logging.warning(f'[error] ({self.current_pos} -> {pos} on z axis) postiton out of bounds')
-                    
-    def move_posS(self, postitions: list):
-        for pos in postitions:
-            if 1 < len(pos):
-                self.move_pos(pos[0], pos[1])
-            else:
-                self.move_pos(pos)
-            
+    def move_pos_line_mult(self, positions: list, speed: int = 50):
+        """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos_line. Speed is in cm/s
+        Arguments:
+            speed: 10-100"""
+        for pos in positions:
+            self.move_pos_line(pos, speed)
+
+
     def land_pad(self):
-        self.move_pos(self.end_pos)
+        """ Moves Tello to end postition then lands. """
+        self.move_pos_line(self.end_pos)
         self.land()
     
     def get_pos(self) -> tuple:
+        """ Gets Tello's current position on field.
+        Returns: 
+            tuple: (x, y, z)"""
         return self.current_pos
     def get_direction(self) -> str:
+        """ Gets Tello's current direction.
+        Returns:
+            tuple: (degree, cardinal). """
         dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
         card_direction = round(self.direction / (360. / len(dirs)))
         return (self.direction, card_direction)
@@ -106,7 +83,59 @@ class Bell_Tello(Tello):
             self.direction += 360
         return super().rotate_counter_clockwise(x)
     
-    def __inch_cm(self, inch) -> float:
-        return inch * 2.54
-    def __cm_inch(self, cm) -> float:
-        return cm / 2.54
+    def __inch_cm(self, inch):
+        """ Returns float for int or float. Returns tuple for tuple. """
+        if type(inch) is int or type(inch) is float:
+            return inch * 2.54
+        elif type(inch) is tuple:
+            return (self.__inch_cm(inch[0]), self.__inch_cm(inch[1]), self.__inch_cm(inch[2]))
+        return None
+    def __cm_inch(self, cm):
+        """ Returns float for int or float. Returns tuple for tuple. """
+        if type(cm) is int or type(cm) is float:
+            return cm / 2.54
+        elif type(cm) is tuple:
+            return (self.__inch_cm(cm[0]), self.__inch_cm(cm[1]), self.__inch_cm(cm[2]))
+        return None
+    
+    # Methods Deprecated    
+    def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
+        """ [DEPRECATED] Move Tello to position in 3D space. Moves one axis at a time. Will not move if position ends at a hazard or out of bounds. """
+        for axis in order:
+            raw_move = pos[self.axis_vals[axis]] - self.current_pos[self.axis_vals[axis]]
+            if 0 < self.current_pos[self.axis_vals[axis]] + raw_move < self.field_length:
+                can_move = True
+                for hazard in self.hazards:
+                    if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
+                        can_move = False
+                move = int(self.__inch_cm(raw_move))
+                if can_move:
+                    if move >= 20:
+                        if axis == 'x':
+                            self.move_forward(move)
+                        elif axis == 'y':
+                            self.move_left(move)
+                        elif axis == 'z':
+                            self.move_up(move)
+                    elif move <= -20:
+                        if axis == 'x':
+                            self.move_back(abs(move))
+                        elif axis == 'y':
+                            self.move_right(abs(move))
+                        elif axis == 'z':
+                            self.move_down(abs(move))
+                    else:
+                        logging.error(f'({self.current_pos} -> {pos} on {axis} axis) move less than 20')
+                    self.current_pos[self.axis_vals[axis]] += move
+                else:
+                    logging.critical(f'({self.current_pos} -> {pos} on {axis} axis) path ends in a hazard')
+            else:
+                logging.warning(f'({self.current_pos} -> {pos} on {axis} axis) postiton out of bounds')
+    def move_pos_axis_mult(self, postitions: list):
+        """ [DEPRECATED] Move Tello to multiple positions in 3D space. Moves one axis at a time. Uses move_pos_axis. """
+        for pos in postitions:
+            if 1 < len(pos):
+                self.move_pos_axis(pos[0], pos[1])
+            else:
+                self.move_pos_axis(pos)
+           
