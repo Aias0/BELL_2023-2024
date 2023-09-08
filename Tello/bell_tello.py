@@ -28,12 +28,12 @@ class Bell_Tello(Tello):
         self.default_speed = 50
  
     def move_pos_line(self, pos: tuple, speed: int = None):
-        """ Move Tello to position in 3D space. Moves in a line. Will not move if flight path intersects a hazard or ends out of bounds. Speed is in cm/s
+        """ Move Tello to position in 3D space. Moves in a line. Rerouts flight path around hazards, will not move if flight path ends out of bounds. Speed is in cm/s
         Arguments:
             speed: 10-100 (Defaults to 50)"""
         self.speed = speed or self.default_speed
         relative_pos = self.__inch_cm(tuple(map(lambda i, j: i - j, pos, self.current_pos)))
-        self.can_fly = True
+        self.path_clear = True
         flight_path = Geometry3D.Segment(Geometry3D.Point(list(self.current_pos)), Geometry3D.Point(list(pos)))
         field = self.geo3D_rect(
             (0, 0, 0),
@@ -45,18 +45,35 @@ class Bell_Tello(Tello):
             (0, self.field_width, self.field_height),
             (self.field_length, self.field_width, self.field_height)
         )
+        # Check flightpath for obstacles
         if not Geometry3D.intersection(Geometry3D.Point(list(pos)), field):
-            can_fly = False
+            path_clear = False
             logging.warning(f'({self.current_pos} -> {pos}) Results in tello moving out of bounds, comand canceled.')
         for hazard in self.hazards:
             if Geometry3D.intersection(flight_path, Geometry3D.Cylinder(Geometry3D.Point(list(hazard[0])), hazard[1], Geometry3D.Vector(0, 0, hazard[2]))):
-                can_fly = False
-                logging.warning(f'({self.current_pos} -> {pos}) Results in tello hitting hazard, path rerouted.')
-        if can_fly:
+                path_clear = False
+                logging.warning(f'({self.current_pos} -> {pos}) Results in tello hitting hazard, path rerouting.')
+        if path_clear:
+            # Check to see if move command is above out of range(-500-500)
+            extra_pos = (0, 0, 0)
+            for idx, axis in enumerate(relative_pos):
+                if abs(axis) > 500:
+                    relative_pos[idx] + 500 * axis/abs(axis)
+                    extra_pos[idx] = relative_pos[idx] + 500 * axis/abs(axis)
+            # Move to position
             self.go_xyz_speed(relative_pos[0], relative_pos[1], relative_pos[2], speed)
             self.current_pos = pos
+            if max(extra_pos) == 0:
+                self.go_xyz_speed(extra_pos[0], extra_pos[1], extra_pos[2], speed)
+        else:
+            # Pathfinding
+            logging.info(f'({self.current_pos} -> {pos}) Path rerouted.')
+            self.go_xyz_speed(relative_pos[0] - hazard[0][0] - 5, relative_pos[1], relative_pos[2], speed)
+            self.move_pos_line((hazard[0][0], hazard[0][1], hazard[0][hazard[2]]))
+            self.current_pos = (hazard[0][0], hazard[0][1], hazard[0][hazard[2]])
+            self.move_pos_line((pos[0], pos[1], pos[2]))
+            self.current_pos = pos
         
-    
     def move_pos_line_mult(self, positions: list, speed: int = None):
         """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos_line. Speed is in cm/s
         Arguments:
