@@ -1,4 +1,4 @@
-import time, cv2, keyboard 
+import time, cv2, keyboard, logging
 from djitellopy import Tello
 from threading import Thread
 import numpy as np
@@ -23,25 +23,19 @@ def video():
         cv2.imshow("Video Feed", img)
         cv2.waitKey(1)
         #cv2.putText(img, f'Batt: {tello.get_battery()}% | Pos: {tello.get_pos()} | Dir: {tello.get_direction()[1]} | {tello.get_direction()[0]} | Temp: {tello.get_temperature} / {tello.get_highest_temperature}', (10,500), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
-        cv2.waitKey(1)
-        
-        
-# Input
-def tello_input():
-    while running:
         if keyboard.is_pressed('space'):
             tello.emergency()
             print('Emergency stop')
             time.sleep(2)
-        if keyboard.is_pressed('q'):
-            exit()
+        if tello.get_battery < 5:
+            logging.critical(f'Battery dangerously low. {tello.get_battery}%')
+        elif tello.get_battery < 10:
+            logging.warning(f'Battery low. {tello.get_battery}%')
+        
             
 # Create and run threads for input and video
 video_feed = Thread(target=video)
-#input_feed = Thread(target=tello_input)
-
 video_feed.start()
-#input_feed.start()
 
 print(f'Battery: {tello.get_battery()}%')
 

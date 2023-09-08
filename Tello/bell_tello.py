@@ -26,30 +26,48 @@ class Bell_Tello(Tello):
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
+        self.default_speed = 50
  
-    def move_pos_line(self, pos: tuple, speed: int = 50):
+    def move_pos_line(self, pos: tuple, speed: int = None):
         """ Move Tello to position in 3D space. Moves in a line. Will not move if flight path intersects a hazard or ends out of bounds. Speed is in cm/s
         Arguments:
-            speed: 10-100"""
+            speed: 10-100 (Defaults to 50)"""
+        self.speed = speed or self.default_speed
         relative_pos = self.__inch_cm(tuple(map(lambda i, j: i - j, pos, self.current_pos)))
         self.can_fly = True
-        print('test')
-        flight_path = Geometry3D.Segment(Geometry3D.Point(self.current_pos), Geometry3D.Point(pos))
-        field = Geometry3D.ConvexPolygon((Geometry3D.Point(0, 0, 0), Geometry3D.Point(self.field_length, 0, 0), Geometry3D.Point(0, self.field_width, 0), Geometry3D.Point(0, 0, self.field_height), Geometry3D.Point(self.field_length, self.field_width, self.field_height)))
-        if not Geometry3D.intersection(Geometry3D.Point(pos), field):
+        flight_path = Geometry3D.Segment(Geometry3D.Point(list(self.current_pos)), Geometry3D.Point(list(pos)))
+        a = Geometry3D.Point(0, 0, 0)
+        b = Geometry3D.Point(self.field_length, 0, 0)
+        c = Geometry3D.Point(0, self.field_width, 0)
+        d = Geometry3D.Point(self.field_length, self.field_width, 0)
+        e = Geometry3D.Point(0, 0, self.field_height)
+        f = Geometry3D.Point(self.field_length, 0, self.field_height)
+        g = Geometry3D.Point(0, self.field_width, self.field_height)
+        h = Geometry3D.Point(self.field_length, self.field_width, self.field_height)
+        field_face0 = Geometry3D.ConvexPolygon((a, b, c, d))
+        field_face1 = Geometry3D.ConvexPolygon((a, b, f, e))
+        field_face2 = Geometry3D.ConvexPolygon((a, c, g, e))
+        field_face3 = Geometry3D.ConvexPolygon((c, d, h, g))
+        field_face4 = Geometry3D.ConvexPolygon((b, d, h, f))
+        field_face5 = Geometry3D.ConvexPolygon((e, f, h, g))
+        field = Geometry3D.ConvexPolyhedron((field_face0,field_face1,field_face2,field_face3,field_face4,field_face5))
+        if not Geometry3D.intersection(Geometry3D.Point(list(pos)), field):
             can_fly = False
+            logging.warning(f'({self.current_pos} -> {pos}) Results in tello moving out of bounds, comand canceled.')
         for hazard in self.hazards:
-            if Geometry3D.intersection(flight_path, Geometry3D.Cylinder(hazard[0], hazard[1], hazard[2])):
+            if Geometry3D.intersection(flight_path, Geometry3D.Cylinder(Geometry3D.Point(list(hazard[0])), hazard[1], Geometry3D.Vector(0, 0, hazard[2]))):
                 can_fly = False
+                logging.warning(f'({self.current_pos} -> {pos}) Results in tello hitting hazard, path rerouted.')
         if can_fly:
             self.go_xyz_speed(relative_pos[0], relative_pos[1], relative_pos[2], speed)
             self.current_pos = pos
         
     
-    def move_pos_line_mult(self, positions: list, speed: int = 50):
+    def move_pos_line_mult(self, positions: list, speed: int = None):
         """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos_line. Speed is in cm/s
         Arguments:
-            speed: 10-100"""
+            speed: 10-100 (Defaults to 50)"""
+        self.speed = speed or self.default_speed
         for pos in positions:
             self.move_pos_line(pos, speed)
 
