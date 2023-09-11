@@ -1,10 +1,13 @@
 from djitellopy import Tello
+from mpl_toolkits import mplot3d
+from threading import Thread
+from support import *
 import numpy as np
 import matplotlib.pyplot as plt
-import math, sys, os, logging, datetime, ladybug_geometry, Geometry3D
+import math, sys, os, logging, datetime, Geometry3D, time
 from data import *
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-logging.basicConfig(filename=f'Logs\Log{LOG_NUM}_{datetime.date.isoformat(datetime.date.today())}_{datetime.datetime.now().strftime("%H-%M-%S")}.log', filemode='w', format='%(asctime)s-%(levelname)s-%(message)s', level=logging.DEBUG)
+logging.basicConfig(filename=f'Logs\Log{LOG_NUM}_{datetime.date.isoformat(datetime.date.today())}_{datetime.datetime.now().strftime("%H-%M-%S")}.log', filemode='w', format='%(asctime)s-%(levelname)s-%(message)s', level=logging.WARNING)
 logging.getLogger().addHandler(logging.StreamHandler())
 LOG_NUM += 1
 with open('data.py', 'r+') as f:
@@ -20,65 +23,67 @@ class Bell_Tello(Tello):
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
-        self.current_pos = (start_pos[0], start_pos[1] + int(self.__cm_inch(80)), start_pos[2]) # Make sure to account for takeoff height
+        self.current_pos = (start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)) # Make sure to account for takeoff height
+        print(self.current_pos)
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
         self.default_speed = 50
+        
+        # Graphing Setup
+        graph_thread = Thread(target=self.graph)
+        graph_thread.start()
  
-    def move_pos_line(self, pos: tuple, speed: int = None):
+    def move_pos_line(self, pos: tuple, speed: int = 50):
         """ Move Tello to position in 3D space. Moves in a line. Rerouts flight path around hazards, will not move if flight path ends out of bounds. Speed is in cm/s
         Arguments:
             speed: 10-100 (Defaults to 50)"""
-        self.speed = speed or self.default_speed
-        relative_pos = self.__inch_cm(tuple(map(lambda i, j: i - j, pos, self.current_pos)))
-        self.path_clear = True
+        self.speed = speed
+        relative_pos = [0, 0, 0]
+        for i in range(3):
+            relative_pos[i] = inch_cm(pos[i] - self.current_pos[i])
+        print(relative_pos)
+        path_clear = True
         flight_path = Geometry3D.Segment(Geometry3D.Point(list(self.current_pos)), Geometry3D.Point(list(pos)))
-        field = self.geo3D_rect(
-            (0, 0, 0),
-            (self.field_length, 0, 0),
-            (0, self.field_width, 0),
-            (self.field_length, self.field_width, 0),
-            (0, 0, self.field_height),
-            (self.field_length, 0, self.field_height),
-            (0, self.field_width, self.field_height),
-            (self.field_length, self.field_width, self.field_height)
-        )
+        field = geo3D_rect(self.field_length, self.field_width, self.field_height)
         # Check flightpath for obstacles
         if not Geometry3D.intersection(Geometry3D.Point(list(pos)), field):
             path_clear = False
             logging.warning(f'({self.current_pos} -> {pos}) Results in tello moving out of bounds, comand canceled.')
         for hazard in self.hazards:
-            if Geometry3D.intersection(flight_path, Geometry3D.Cylinder(Geometry3D.Point(list(hazard[0])), hazard[1], Geometry3D.Vector(0, 0, hazard[2]))):
+            if hazard[0] == 'c' and Geometry3D.intersection(flight_path, Geometry3D.Cylinder(Geometry3D.Point(list(hazard[1])), hazard[2], Geometry3D.Vector(0, 0, hazard[3]))):
                 path_clear = False
                 logging.warning(f'({self.current_pos} -> {pos}) Results in tello hitting hazard, path rerouting.')
+            
         if path_clear:
             # Check to see if move command is above out of range(-500-500)
-            extra_pos = (0, 0, 0)
+            extra_pos = [0, 0, 0]
             for idx, axis in enumerate(relative_pos):
                 if abs(axis) > 500:
-                    relative_pos[idx] + 500 * axis/abs(axis)
-                    extra_pos[idx] = relative_pos[idx] + 500 * axis/abs(axis)
+                    relative_pos[idx] =- 500 * axis/abs(axis)
+                    extra_pos[idx] = relative_pos[idx] - 500 * axis/abs(axis)
             # Move to position
-            self.go_xyz_speed(relative_pos[0], relative_pos[1], relative_pos[2], speed)
+            print(f'Moving: {pos}')
+            self.go_xyz_speed(int(relative_pos[0]), int(relative_pos[1]), int(relative_pos[2]), int(speed))
             self.current_pos = pos
-            if max(extra_pos) == 0:
+            if max(extra_pos) != 0:
                 self.go_xyz_speed(extra_pos[0], extra_pos[1], extra_pos[2], speed)
         else:
             # Pathfinding
             logging.info(f'({self.current_pos} -> {pos}) Path rerouted.')
-            self.go_xyz_speed(relative_pos[0] - hazard[0][0] - 5, relative_pos[1], relative_pos[2], speed)
-            self.move_pos_line((hazard[0][0], hazard[0][1], hazard[0][hazard[2]]))
-            self.current_pos = (hazard[0][0], hazard[0][1], hazard[0][hazard[2]])
-            self.move_pos_line((pos[0], pos[1], pos[2]))
+            print(f'Moving: {(hazard[1][0], hazard[1][1], hazard[3] + 10)}')
+            self.move_pos_line((hazard[1][0], hazard[1][1], hazard[3] + 10))
+            self.current_pos = (hazard[1][0], hazard[1][1], hazard[3] + 10)
+            print(f'Moving: {pos}')
+            self.move_pos_line(pos)
             self.current_pos = pos
         
-    def move_pos_line_mult(self, positions: list, speed: int = None):
+    def move_pos_line_mult(self, positions: list, speed: int = 50):
         """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos_line. Speed is in cm/s
         Arguments:
             speed: 10-100 (Defaults to 50)"""
-        self.speed = speed or self.default_speed
+        self.speed = speed
         for pos in positions:
             self.move_pos_line(pos, speed)
 
@@ -86,7 +91,9 @@ class Bell_Tello(Tello):
     def land_pad(self):
         """ Moves Tello to end postition then lands. """
         self.move_pos_line(self.end_pos)
+        time.sleep(1)
         self.land()
+        self.close_graph()
     
     def get_pos(self) -> tuple:
         """ Gets Tello's current position on field.
@@ -112,37 +119,40 @@ class Bell_Tello(Tello):
             self.direction += 360
         return super().rotate_counter_clockwise(x)
     
-    def __inch_cm(self, inch):
-        """ Returns float for int or float. Returns tuple for tuple. """
-        if type(inch) is int or type(inch) is float:
-            return inch * 2.54
-        elif type(inch) is tuple:
-            return (self.__inch_cm(inch[0]), self.__inch_cm(inch[1]), self.__inch_cm(inch[2]))
-        return None
-    def __cm_inch(self, cm):
-        """ Returns float for int or float. Returns tuple for tuple. """
-        if type(cm) is int or type(cm) is float:
-            return cm / 2.54
-        elif type(cm) is tuple:
-            return (self.__inch_cm(cm[0]), self.__inch_cm(cm[1]), self.__inch_cm(cm[2]))
-        return None
+    # Graphing            
+    def graph(self):
+        # defining surface and axes
+        x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
+        y = x.copy().T
+        z = np.cos(x ** 2 + y ** 3)
+
+        self.fig = plt.figure()
+
+        # syntax for 3-D plotting
+        ax = plt.axes(projection='3d')
+        ax.set_title('Field')
+        ax.set_xlim(0,472)
+        ax.set_ylim(0,170)
+
+        ax.set_zlim(0,200)
+        ax.set_aspect('equal')
+        ax.view_init(30, -130)
+        move_figure(self.fig, 1500, 200)
     
-    def geo3D_rect(a: tuple, b: tuple, c: tuple, d: tuple, e: tuple, f: tuple, g: tuple, h: tuple):
-        a = Geometry3D.Point(list(a))
-        b = Geometry3D.Point(list(b))
-        c = Geometry3D.Point(list(c))
-        d = Geometry3D.Point(list(d))
-        e = Geometry3D.Point(list(e))
-        f = Geometry3D.Point(list(f))
-        g = Geometry3D.Point(list(g))
-        h = Geometry3D.Point(list(h))
-        field_face0 = Geometry3D.ConvexPolygon((a, b, c, d))
-        field_face1 = Geometry3D.ConvexPolygon((a, b, f, e))
-        field_face2 = Geometry3D.ConvexPolygon((a, c, g, e))
-        field_face3 = Geometry3D.ConvexPolygon((c, d, h, g))
-        field_face4 = Geometry3D.ConvexPolygon((b, d, h, f))
-        field_face5 = Geometry3D.ConvexPolygon((e, f, h, g))
-        return Geometry3D.ConvexPolyhedron((field_face0,field_face1,field_face2,field_face3,field_face4,field_face5))
+        # syntax for plotting
+        for hazard in HAZARD_LIST:
+            if hazard[0] == 'c':
+                Xc,Yc,Zc = data_for_cylinder_along_z(hazard[1][0], hazard[1][1], hazard[2], hazard[3])
+                ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
+        
+        Xc,Zc,Yc = data_for_cylinder_along_z(404, 90, 5, 70+50, 50)
+        ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
+        Zc,Yc,Xc = data_for_cylinder_along_z(44, 40, 5, 70+54, 54)
+        ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
+        plt.show()
+        
+    def close_graph():
+        plt.close()
     
     # Methods Deprecated    
     def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
@@ -154,7 +164,7 @@ class Bell_Tello(Tello):
                 for hazard in self.hazards:
                     if math.sqrt((self.current_pos[0] - hazard[0][0]) ** 2 + (self.current_pos[1] - hazard[0][1]) ** 2) < hazard[1] or hazard[2] > self.current_pos[2]:
                         can_move = False
-                move = int(self.__inch_cm(raw_move))
+                move = int(inch_cm(raw_move))
                 if can_move:
                     if move >= 20:
                         if axis == 'x':
