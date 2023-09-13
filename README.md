@@ -37,8 +37,6 @@ pip install 'library name'
    * If you don't have pip install it.
    ```
    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-   ```
-   ```
    python get-pip.py
    ```
 
