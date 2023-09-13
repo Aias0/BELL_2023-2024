@@ -8,7 +8,7 @@ Bell Team One Git Repository.
 * Install Git
     * For Mac(Run in Terminal):
     ```
-    $ git --version
+    git --version
     ```
     * For Windows
 
