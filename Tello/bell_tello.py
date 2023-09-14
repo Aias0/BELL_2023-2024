@@ -14,23 +14,21 @@ with open('data.py', 'r+') as f:
     f.write(f'LOG_NUM = {LOG_NUM}')
 
 class Bell_Tello(Tello):
-    """  Wrapper for djitellopy. Allows for positional movement based on a defined field along with other miscellaneous functions."""
-    def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list):
+    """  Pyhton wrapper for djitellopy. Allows for positional movement based on a defined field along with other miscellaneous functions."""
+    def __init__(self, field_dimensions: tuple, start_pos: tuple, end_pos: tuple, hazards: list):
         super().__init__()
-        self.field_length = field_length
-        self.field_width = field_width
-        self.field_height = field_height
+        self.field_length = field_dimensions[0]
+        self.field_width = field_dimensions[1]
+        self.field_height = field_dimensions[2]
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
         self.current_pos = (start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)) # Make sure to account for takeoff height
-        print(self.current_pos)
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
         self.default_speed = 50
-        
         # Graphing Setup
         self.graph_thread = Thread(target=self.graph)
         self.graph_thread.start()
@@ -61,10 +59,11 @@ class Bell_Tello(Tello):
             extra_pos = [0, 0, 0]
             for idx, axis in enumerate(relative_pos):
                 if abs(axis) > 500:
-                    relative_pos[idx] =- 500 * axis/abs(axis)
-                    extra_pos[idx] = relative_pos[idx] - 500 * axis/abs(axis)
+                    print('More than 500')
+                    relative_pos[idx] =- 500 * axis/abs(axis) * -1
+                    extra_pos[idx] = relative_pos[idx] - 500 * axis/abs(axis) * -1
             # Move to position
-            print(f'Moving: {pos}')
+            print(f'Moving: {pos} | {relative_pos}')
             self.go_xyz_speed(int(relative_pos[0]), int(relative_pos[1]), int(relative_pos[2]), int(speed))
             self.current_pos = pos
             if max(extra_pos) != 0:
@@ -105,8 +104,8 @@ class Bell_Tello(Tello):
         Returns:
             tuple: (degree, cardinal). """
         dirs = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-        card_direction = round(self.direction / (360. / len(dirs)))
-        return (self.direction, card_direction)
+        card_direction = dirs[round(self.direction / (360. / len(dirs)))]
+        return (card_direction, self.direction)
     
     def rotate_clockwise(self, x: int):
         self.direction += x
@@ -153,7 +152,6 @@ class Bell_Tello(Tello):
         
     def close_graph(self):
         plt.close()
-        self.graph_thread.join()
     
     # Methods Deprecated    
     def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):

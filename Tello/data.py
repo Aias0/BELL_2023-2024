@@ -1,4 +1,4 @@
-LOG_NUM = 108
+LOG_NUM = 136
 
 HAZARD_LIST = [
     ('c', (231, 82, 0), 14, 32), # Fire Rescue Building
