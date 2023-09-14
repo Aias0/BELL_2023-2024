@@ -14,9 +14,9 @@ with open('data.py', 'r+') as f:
     f.write(f'LOG_NUM = {LOG_NUM}')
 
 class Bell_Tello(Tello):
-    def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list = []):
+    """  Wrapper for djitellopy. Allows for positional movement based on a defined field along with other miscellaneous functions."""
+    def __init__(self, field_length: int, field_width: int, field_height: int, start_pos: tuple, end_pos: tuple, hazards: list):
         super().__init__()
-        logging.debug('init')
         self.field_length = field_length
         self.field_width = field_width
         self.field_height = field_height
@@ -32,8 +32,8 @@ class Bell_Tello(Tello):
         self.default_speed = 50
         
         # Graphing Setup
-        graph_thread = Thread(target=self.graph)
-        graph_thread.start()
+        self.graph_thread = Thread(target=self.graph)
+        self.graph_thread.start()
  
     def move_pos_line(self, pos: tuple, speed: int = 50):
         """ Move Tello to position in 3D space. Moves in a line. Rerouts flight path around hazards, will not move if flight path ends out of bounds. Speed is in cm/s
@@ -151,8 +151,9 @@ class Bell_Tello(Tello):
         ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
         plt.show()
         
-    def close_graph():
+    def close_graph(self):
         plt.close()
+        self.graph_thread.join()
     
     # Methods Deprecated    
     def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):
