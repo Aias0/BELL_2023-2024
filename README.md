@@ -8,7 +8,7 @@ Bell Team One Git Repository.
 * Install Git
     * For Mac(Run in Terminal):
     ```
-    $ git --version
+    git --version
     ```
     * For Windows
 
@@ -30,6 +30,15 @@ Bell Team One Git Repository.
 * Add Python and VS Code to PATH
     * System Properties-Advanced-Enivromental Variables-Path-New
     * Add your VS Code bin folder and python folder
+* Install libraries: djitellopy, numpy, matplotlib, Geometry3D
+```
+pip install 'library name'
+```
+   * If you don't have pip install it.
+   ```
+   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+   python get-pip.py
+   ```
 
 ### How to use
 
