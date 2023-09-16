@@ -72,7 +72,9 @@ def move_figure(f, x, y):
         # You can also use window.setGeometry
         f.canvas.manager.window.move(x, y)
 
+
 def geo3D_rect(length: int, width: int, height: int):
+    """ function that creates a 3d rectangle based on the length, width and heigh parameters """
     a = Geometry3D.Point(list((0, 0, 0)))
     b = Geometry3D.Point(list((length, 0, 0)))
     c = Geometry3D.Point(list((0, width, 0)))
