@@ -4,7 +4,6 @@ from djitellopy import Tello
 from vpython import *
 
 
-
 tello = Tello()
 tello.connect()
 
