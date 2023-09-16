@@ -1,20 +1,16 @@
-import time, cv2, keyboard, logging
+from bell_tello import Bell_Tello
+from data import *
 from djitellopy import Tello
 from threading import Thread
 import numpy as np
-from bell_tello import Bell_Tello
-from data import *
-from support import *
+import cv2, keyboard, time, logging
 
-tello = Bell_Tello((472, 170, 200), (180, 116, 0), (231, 116, 40), HAZARD_LIST)
+tello = Tello()
 tello.connect()
-print(f'Battery: {tello.get_battery()}%')
 
-global video
 tello.streamon()
 running = True
 
-# Video
 def CIC():
     first_run = True
     while running:
@@ -31,7 +27,7 @@ def CIC():
         mask = text_bak.astype(bool)
         out[mask] = cv2.addWeighted(video, alpha, text_bak, alpha - 0.75, 20)[mask]
         #Text
-        out = cv2.putText(out, f'Batt: {tello.get_battery()}% | Pos: ({int(tello.get_pos()[0])}, {int(tello.get_pos()[1])}, {int(tello.get_pos()[2])}) | Dir: {tello.get_direction()[1]} - {tello.get_direction()[0]} | Temp: {tello.get_temperature()} / {tello.get_highest_temperature()}', 
+        out = cv2.putText(out, f'Batt: {tello.get_battery()}%', 
                           (10,945), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
         #Display
         cv2.imshow('Video Feed', out)
@@ -49,7 +45,7 @@ def CIC():
             exit()
         if keyboard.is_pressed('1'):
             tello.set_video_direction(Tello.CAMERA_FORWARD)
-        if keyboard.is_pressed('2'):
+        if keyboard.is_pressed('1'):
             tello.set_video_direction(Tello.CAMERA_DOWNWARD)
         # Info
         if tello.get_battery() < 5:
@@ -58,39 +54,30 @@ def CIC():
             logging.warning(f'Battery low. {tello.get_battery}%')
         
 # Create and run threads for input and video
-CIC_feed = Thread(target=CIC)
-#CIC_feed.daemon(True)
-CIC_feed.start()
+#CIC_feed = Thread(target=CIC)
+#CIC_feed.start()
 
-# Movement commands
 tello.takeoff()
-time.sleep(200)
-tello.current_pos[2] = tello.get_barometer()
- 
-tello.move_pos_line(
-    (404, 120, 120), # Move to top of highest building on right
-)
-time.sleep(2)
-tello.move_pos_line(
-    (424, 85, 90), # Move to scanning position
-)
-tello.rotate_clockwise(180)
 
-print('scan')
-tower_scan = tello.get_frame_read().frame
-tower_scan = cv2.cvtColor(tower_scan, cv2.COLOR_RGB2BGR) 
-tower_color = cv2.resize(tower_scan, (360, 240))
-winname = cv2.namedWindow('Tower Color')
-cv2.moveWindow(winname, 40,30)
-cv2.imshow(winname, tower_scan)
-time.sleep(2)
+movement = {'w': 0, 's': 0, 'a': 0, 'd': 0, 'space': 0, 'alt': 0, 'q': 0, 'e': 0}
 
-tello.rotate_counter_clockwise(180)
-
-tello.land_pad()
-
-# Closeing threads
-running = False
-CIC_feed.join()
-tello.streamoff()
-tello.close_graph()
+while True:
+    if keyboard.is_pressed('w'):
+        movement['w'] = 100
+        print('forward')
+    if keyboard.is_pressed('s'):
+        movement['s'] = 100
+    if keyboard.is_pressed('a'):
+        movement['a'] = 100
+    if keyboard.is_pressed('d'):
+        movement['d'] = 100
+    if keyboard.is_pressed('space'):
+        movement['space'] = 100
+    if keyboard.is_pressed('c'):
+        movement['c'] = 100
+    if keyboard.is_pressed('q'):
+        movement['q'] = 100
+    if keyboard.is_pressed('e'):
+        movement['e'] = 100
+    tello.send_rc_control(movement['a'] - movement['d'], movement['w'] - movement['s'], movement['space'] - movement['c'], movement['q'] - movement['e'])
+    movement = {'w': 0, 's': 0, 'a': 0, 'd': 0, 'space': 0, 'alt': 0, 'q': 0, 'e': 0}

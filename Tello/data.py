@@ -1,4 +1,4 @@
-LOG_NUM = 136
+LOG_NUM = 158
 
 HAZARD_LIST = [
     ('c', (231, 82, 0), 14, 32), # Fire Rescue Building
@@ -15,4 +15,4 @@ HAZARD_LIST = [
 ]
 
 # Hazard structure:
-# ((x, y), radius, height), # Name of structure
+# (shape, (x, y, z), radius, height), # Name of structure
