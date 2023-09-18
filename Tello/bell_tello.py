@@ -23,7 +23,7 @@ class Bell_Tello(Tello):
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
-        self.current_pos = (start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)) # Make sure to account for takeoff height
+        self.current_pos = [start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)] # Make sure to account for takeoff height
         self.direction = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)

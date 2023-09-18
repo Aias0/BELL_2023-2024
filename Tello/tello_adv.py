@@ -53,9 +53,9 @@ def CIC():
             tello.set_video_direction(Tello.CAMERA_DOWNWARD)
         # Info
         if tello.get_battery() < 5:
-            logging.critical(f'Battery dangerously low. {tello.get_battery}%')
+            logging.critical(f'Battery dangerously low. {tello.get_battery()}%')
         elif tello.get_battery() < 10:
-            logging.warning(f'Battery low. {tello.get_battery}%')
+            logging.warning(f'Battery low. {tello.get_battery()}%')
         
 # Create and run threads for input and video
 CIC_feed = Thread(target=CIC)
@@ -64,9 +64,9 @@ CIC_feed.start()
 
 # Movement commands
 tello.takeoff()
+time.sleep(1)
+tello.current_pos[2] = tello.get_height()
 time.sleep(200)
-tello.current_pos[2] = tello.get_barometer()
- 
 tello.move_pos_line(
     (404, 120, 120), # Move to top of highest building on right
 )
