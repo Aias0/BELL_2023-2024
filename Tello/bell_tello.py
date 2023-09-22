@@ -66,6 +66,7 @@ class Bell_Tello(Tello):
             print(f'Moving: {pos} | {relative_pos}')
             self.go_xyz_speed(int(relative_pos[0]), int(relative_pos[1]), int(relative_pos[2]), int(speed))
             self.current_pos = pos
+            # Move leftover
             if max(extra_pos) != 0:
                 self.go_xyz_speed(extra_pos[0], extra_pos[1], extra_pos[2], speed)
         else:
@@ -120,11 +121,6 @@ class Bell_Tello(Tello):
     
     # Graphing            
     def graph(self):
-        # defining surface and axes
-        x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
-        y = x.copy().T
-        z = np.cos(x ** 2 + y ** 3)
-
         self.fig = plt.figure()
 
         # syntax for 3-D plotting
