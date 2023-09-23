@@ -56,6 +56,7 @@ def CIC():
             logging.critical(f'Battery dangerously low. {tello.get_battery()}%')
         elif tello.get_battery() < 10:
             logging.warning(f'Battery low. {tello.get_battery()}%')
+        first_run = False
         
 # Create and run threads for input and video
 CIC_feed = Thread(target=CIC)
@@ -66,30 +67,49 @@ CIC_feed.start()
 tello.takeoff()
 time.sleep(1)
 tello.current_pos[2] = tello.get_height()
-time.sleep(200)
-tello.move_pos_line(
+time.sleep(2)
+
+# Going to School to drop smokejumper
+tello.move_pos(
+    (116, 39, 30), #Move to school building
+)
+time.sleep(0.5)
+tello.payload_release()
+
+# Going to scan red/blue screen
+tello.move_pos(
     (404, 120, 120), # Move to top of highest building on right
 )
 time.sleep(2)
-tello.move_pos_line(
+tello.move_pos(
     (424, 85, 90), # Move to scanning position
 )
 tello.rotate_clockwise(180)
 
+# Seeing tower screen is Red or Blue
 print('scan')
 tower_scan = tello.get_frame_read().frame
-tower_scan = cv2.cvtColor(tower_scan, cv2.COLOR_RGB2BGR) 
+tower_scan = cv2.cvtColor(tower_scan, cv2.COLOR_RGB2BGR)
+# Processing Scan
+mask1 = cv2.inRange(tower_scan, (0,50,20), (5,255,255))
+mask2 = cv2.inRange(tower_scan, (175,50,20), (180,255,255))
+mask = cv2.bitwise_or(mask1, mask2)
+scan_red = False
+if cv2.countNonZero(mask) > 0:
+    scan_red = True
+# Showing Scan
 tower_color = cv2.resize(tower_scan, (360, 240))
-winname = cv2.namedWindow('Tower Color')
-cv2.moveWindow(winname, 40,30)
-cv2.imshow(winname, tower_scan)
+rb = {'Red': True, 'Blue': False}
+tower_color = cv2.putText(tower_color, f'Color: {rb[scan_red]}')
+cv2.imshow('Tower Scan', tower_scan)
+cv2.moveWindow('Tower Scan', 40,30)
 time.sleep(2)
-
 tello.rotate_counter_clockwise(180)
 
-tello.land_pad()
+# Land at Firebuilding Pad
+tello.land_building_pad()
 
-# Closeing threads
+# Closing and cleaning up
 running = False
 CIC_feed.join()
 tello.streamoff()

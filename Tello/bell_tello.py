@@ -25,15 +25,15 @@ class Bell_Tello(Tello):
         self.hazards = hazards
         self.current_pos = [start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)] # Make sure to account for takeoff height
         self.direction = 0
+        self.speed = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
-        self.default_speed = 50
         # Graphing Setup
         self.graph_thread = Thread(target=self.graph)
         self.graph_thread.start()
  
-    def move_pos_line(self, pos: tuple, speed: int = 50):
+    def move_pos(self, pos: tuple, speed: int = 50):
         """ Move Tello to position in 3D space. Moves in a line. Rerouts flight path around hazards, will not move if flight path ends out of bounds. Speed is in cm/s
         Arguments:
             speed: 10-100 (Defaults to 50)"""
@@ -73,27 +73,36 @@ class Bell_Tello(Tello):
             # Pathfinding
             logging.info(f'({self.current_pos} -> {pos}) Path rerouted.')
             print(f'Moving: {(hazard[1][0], hazard[1][1], hazard[3] + 10)}')
-            self.move_pos_line((hazard[1][0], hazard[1][1], hazard[3] + 10))
+            self.move_pos((hazard[1][0], hazard[1][1], hazard[3] + 10))
             self.current_pos = (hazard[1][0], hazard[1][1], hazard[3] + 10)
             print(f'Moving: {pos}')
-            self.move_pos_line(pos)
+            self.move_pos(pos)
             self.current_pos = pos
         
-    def move_pos_line_mult(self, positions: list, speed: int = 50):
-        """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos_line. Speed is in cm/s
+    def move_pos_mult(self, positions: list, speed: int = 50):
+        """ Move Tello to multiple positions in 3D space. Moves in a line. Uses move_pos. Speed is in cm/s
         Arguments:
             speed: 10-100 (Defaults to 50)"""
         self.speed = speed
         for pos in positions:
-            self.move_pos_line(pos, speed)
+            self.move_pos(pos, speed)
 
 
-    def land_pad(self):
+    def land_building_pad(self):
         """ Moves Tello to end postition then lands. """
-        self.move_pos_line(self.end_pos)
+        self.move_pos((self.end_pos[0], self.end_pos[1], self.end_pos[2]+10))
         time.sleep(1)
         self.land()
-        self.close_graph()
+        
+    def land_ground_pad(self):
+        """ Moves Tello to start postition then lands. """
+        self.move_pos((self.start_pos[0], self.start_pos[1], self.start_pos[2]+10))
+        time.sleep(1)
+        self.land()
+        
+    def payload_release(self):
+        """ [Under Construction] Releases payload. """
+        print('payload released')
     
     def get_pos(self) -> tuple:
         """ Gets Tello's current position on field.
@@ -118,19 +127,19 @@ class Bell_Tello(Tello):
         if self.direction < 0:
             self.direction += 360
         return super().rotate_counter_clockwise(x)
-    
+        
     # Graphing            
     def graph(self):
         self.fig = plt.figure()
 
-        # syntax for 3-D plotting
+        # Define plot size
         ax = plt.axes(projection='3d')
         ax.set_title('Field')
-        ax.set_xlim(0,472)
-        ax.set_ylim(0,170)
-
-        ax.set_zlim(0,200)
+        ax.set_xlim(0, self.field_length)
+        ax.set_ylim(0, self.field_width)
+        ax.set_zlim(0, self.field_height)
         ax.set_aspect('equal')
+        # Move window and set view
         ax.view_init(30, -130)
         move_figure(self.fig, 1500, 200)
     
