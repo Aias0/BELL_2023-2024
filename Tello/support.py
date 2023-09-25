@@ -90,39 +90,3 @@ def geo3D_rect(length: int, width: int, height: int):
     field_face4 = Geometry3D.ConvexPolygon((b, d, h, f))
     field_face5 = Geometry3D.ConvexPolygon((e, f, h, g))
     return Geometry3D.ConvexPolyhedron((field_face0,field_face1,field_face2,field_face3,field_face4,field_face5))
-""" 
-# defining surface and axes
-x = np.outer(np.linspace(-2, 2, 10), np.ones(10))
-y = x.copy().T
-z = np.cos(x ** 2 + y ** 3)
- 
-fig = plt.figure()
- 
-# syntax for 3-D plotting
-ax = plt.axes(projection='3d')
-ax.set_xlim(0,472)
-ax.set_ylim(0,170)
-
-ax.set_zlim(0,200)
-ax.set_aspect('equal')
-ax.view_init(30, -130)
-move_figure(fig, 1500, 200)
-ax.set_title('Field')
-
-# syntax for plotting
-for hazard in HAZARD_LIST:  
-    Xc,Yc,Zc = data_for_cylinder_along_z(hazard[1][0], hazard[1][1], hazard[2], hazard[3])
-    ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-
-Xc,Zc,Yc = data_for_cylinder_along_z(404, 90, 5, 70+50, 50)
-ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-Zc,Yc,Xc = data_for_cylinder_along_z(44, 40, 5, 70+54, 54)
-ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-
-x = np.linspace(292, 472, 100)
-y = np.linspace(0, 170, 100)
-x, y = np.meshgrid(x, y)
-eq = 0.12 * x + 0.01 * y + 1.09
-ax.plot_surface(x, y, eq)
-
-plt.show() """

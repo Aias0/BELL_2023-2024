@@ -143,16 +143,17 @@ class Bell_Tello(Tello):
         ax.view_init(30, -130)
         move_figure(self.fig, 1500, 200)
     
-        # syntax for plotting
+        # Plot buildings
         for hazard in HAZARD_LIST:
             if hazard[0] == 'c':
                 Xc,Yc,Zc = data_for_cylinder_along_z(hazard[1][0], hazard[1][1], hazard[2], hazard[3])
                 ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-        
+        #Plot crossways
         Xc,Zc,Yc = data_for_cylinder_along_z(404, 90, 5, 70+50, 50)
         ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
         Zc,Yc,Xc = data_for_cylinder_along_z(44, 40, 5, 70+54, 54)
         ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
+        # Show plot
         plt.show()
         
     def close_graph(self):

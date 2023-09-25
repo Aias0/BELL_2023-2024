@@ -6,6 +6,7 @@ from bell_tello import Bell_Tello
 from data import *
 from support import *
 
+start_time = time.time()
 tello = Bell_Tello((472, 170, 200), (180, 116, 0), (231, 116, 40), HAZARD_LIST)
 tello.connect()
 print(f'Battery: {tello.get_battery()}%')
@@ -67,14 +68,16 @@ CIC_feed.start()
 tello.takeoff()
 time.sleep(1)
 tello.current_pos[2] = tello.get_height()
-time.sleep(2)
 
-# Going to School to drop smokejumper
 tello.move_pos(
     (116, 39, 30), #Move to school building
 )
 time.sleep(0.5)
-tello.payload_release()
+tello.payload_release() # Drop firejumper
+time.sleep(0.5)
+
+tello.land_ground_pad()
+time.sleep(30 - (start_time - time.time())) # Wait out rest of 30 sec auto period
 
 # Going to scan red/blue screen
 tello.move_pos(
@@ -87,7 +90,6 @@ tello.move_pos(
 tello.rotate_clockwise(180)
 
 # Seeing tower screen is Red or Blue
-print('scan')
 tower_scan = tello.get_frame_read().frame
 tower_scan = cv2.cvtColor(tower_scan, cv2.COLOR_RGB2BGR)
 # Processing Scan
@@ -103,7 +105,7 @@ rb = {'Red': True, 'Blue': False}
 tower_color = cv2.putText(tower_color, f'Color: {rb[scan_red]}')
 cv2.imshow('Tower Scan', tower_scan)
 cv2.moveWindow('Tower Scan', 40,30)
-time.sleep(2)
+time.sleep(1)
 tello.rotate_counter_clockwise(180)
 
 # Land at Firebuilding Pad
