@@ -33,7 +33,7 @@ def CIC():
         out[mask] = cv2.addWeighted(video, alpha, text_bak, alpha - 0.75, 20)[mask]
         #Text
         out = cv2.putText(out, f'Batt: {tello.get_battery()}% | Pos: ({int(tello.get_pos()[0])}, {int(tello.get_pos()[1])}, {int(tello.get_pos()[2])}) | Dir: {tello.get_direction()[1]} - {tello.get_direction()[0]} | Temp: {tello.get_temperature()} / {tello.get_highest_temperature()}', 
-                          (10,945), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
+                         (10,945), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 1, 2)
         #Display
         cv2.imshow('Video Feed', out)
         if first_run: cv2.moveWindow('Video Feed', 10, 10)
@@ -48,10 +48,8 @@ def CIC():
             tello.streamoff()
             tello.close_graph()
             exit()
-        if keyboard.is_pressed('1'):
-            tello.set_video_direction(Tello.CAMERA_FORWARD)
-        if keyboard.is_pressed('2'):
-            tello.set_video_direction(Tello.CAMERA_DOWNWARD)
+        if keyboard.is_pressed('tab'):
+            tello.toggle_video_direction()
         # Info
         if tello.get_battery() < 5:
             logging.critical(f'Battery dangerously low. {tello.get_battery()}%')
@@ -68,16 +66,22 @@ CIC_feed.start()
 tello.takeoff()
 time.sleep(1)
 tello.current_pos[2] = tello.get_height()
-
+def test(*kwargs):
+    pass
 tello.move_pos(
     (116, 39, 30), #Move to school building
 )
+
+tello.set_video_direction(Tello.CAMERA_DOWNWARD)
 time.sleep(0.5)
 tello.payload_release() # Drop firejumper
 time.sleep(0.5)
+tello.set_video_direction(Tello.CAMERA_FORWARD)
 
 tello.land_ground_pad()
-time.sleep(30 - (start_time - time.time())) # Wait out rest of 30 sec auto period
+auto_time_left = 30 - (start_time - time.time())
+if auto_time_left > 0:
+    time.sleep(auto_time_left) # Wait out rest of 30 sec auto period
 
 # Going to scan red/blue screen
 tello.move_pos(

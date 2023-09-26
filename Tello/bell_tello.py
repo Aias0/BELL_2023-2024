@@ -25,6 +25,7 @@ class Bell_Tello(Tello):
         self.hazards = hazards
         self.current_pos = [start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)] # Make sure to account for takeoff height
         self.direction = 0
+        self.camera_forward = True
         self.speed = 0
         # Pos: (x, y, z)
         # Hazards: (pos, radius, height)
@@ -127,6 +128,12 @@ class Bell_Tello(Tello):
         if self.direction < 0:
             self.direction += 360
         return super().rotate_counter_clockwise(x)
+    
+    def set_video_direction(self, x: int):
+        self.camera_forward = not bool(x)
+        super().set_video_direction(x)
+    def toggle_video_direction(self):
+        self.set_video_direction(int(not self.camera_forward))
         
     # Graphing            
     def graph(self):
