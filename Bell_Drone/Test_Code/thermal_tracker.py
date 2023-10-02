@@ -1,8 +1,7 @@
 import cv2, time
 import numpy as np
 from scipy import ndimage
-
-test_imgs = ["C:/Users/quent/OneDrive/Desktop/unnamed.png", "C:/Users/quent/OneDrive/Desktop/fnp-toc-default-thermal-imaging.jpg", "C:/Users/quent/OneDrive/Desktop/thermal-hot-spot-300x224.jpg", "C:/Users/quent/OneDrive/Desktop/HotSpot-thermal-image.jpg", "C:/Users/quent/OneDrive/Desktop/eyJidWNrZXQiOiJ3ZXZvbHZlci1wcm9qZWN0LWltYWdlcyIsImtleSI6ImZyb2FsYS8xNjI5ODg4Nzk4MzYzLWNpcmN1aXQtcGFuZWwtMi5qcGciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjk1MCwiZml0IjoiY292ZXIifX19.webp"]
+test_imgs = ['Misc/Thermal_Images/unnamed.png', "Misc/Thermal_Images/fnp-toc-default-thermal-imaging.jpg", "Misc/Thermal_Images/thermal-hot-spot-300x224.jpg", "Misc/Thermal_Images/HotSpot-thermal-image.jpg", "Misc/Thermal_Images/eyJidWNrZXQiOiJ3ZXZvbHZlci1wcm9qZWN0LWltYWdlcyIsImtleSI6ImZyb2FsYS8xNjI5ODg4Nzk4MzYzLWNpcmN1aXQtcGFuZWwtMi5qcGciLCJlZGl0cyI6eyJyZXNpemUiOnsid2lkdGgiOjk1MCwiZml0IjoiY292ZXIifX19.webp"]
 
 thermal_image = cv2.imread(test_imgs[0])
 thermal_image = cv2.resize(thermal_image, (720, 480))
