@@ -1,3 +1,3 @@
-[submodule "PCC/libraries/Queue"]
-	path = AVR
+[submodule "AVR"]
+	path = AVR/AVR-2022
 	url = https://github.com/Aias0/AVR-2022.git
