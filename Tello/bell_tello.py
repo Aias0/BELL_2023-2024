@@ -15,7 +15,7 @@ with open('data.py', 'r+') as f:
 
 class Bell_Tello(Tello):
     """  Pyhton wrapper for djitellopy. Allows for positional movement based on a defined field along with other miscellaneous functions."""
-    def __init__(self, field_dimensions: tuple, start_pos: tuple, end_pos: tuple, hazards: list):
+    def __init__(self, field_dimensions: tuple, start_pos: tuple, end_pos: tuple, hazards: list, tello_radius: float = 2.5):
         super().__init__()
         self.field_length = field_dimensions[0]
         self.field_width = field_dimensions[1]
@@ -23,6 +23,7 @@ class Bell_Tello(Tello):
         self.start_pos = start_pos
         self.end_pos = end_pos
         self.hazards = hazards
+        self.tello_rad = tello_radius
         self.current_pos = [start_pos[0], start_pos[1], start_pos[2] + cm_inch(80)] # Make sure to account for takeoff height
         self.direction = 0
         self.camera_forward = True
@@ -44,7 +45,7 @@ class Bell_Tello(Tello):
             relative_pos[i] = inch_cm(pos[i] - self.current_pos[i])
         print(relative_pos)
         path_clear = True
-        flight_path = Geometry3D.Segment(Geometry3D.Point(list(self.current_pos)), Geometry3D.Point(list(pos)))
+        flight_path = Geometry3D.Cylinder(Geometry3D.Point(list(self.current_pos)), self.tello_rad, Geometry3D.Vector(np.subtract(pos, self.current_pos)))
         field = geo3D_rect(self.field_length, self.field_width, self.field_height)
         # Check flightpath for obstacles
         if not Geometry3D.intersection(Geometry3D.Point(list(pos)), field):

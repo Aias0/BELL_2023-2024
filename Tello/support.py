@@ -27,20 +27,6 @@ def data_for_cylinder_along_z(center_x,center_y,radius,height_z, start_z = 0):
     return x_grid,y_grid,z_grid
 
 def cuboid_data(center, size):
-    """
-       Create a data array for cuboid plotting.
-
-
-       ============= ================================================
-       Argument      Description
-       ============= ================================================
-       center        center of the cuboid, triple
-       size          size of the cuboid, triple, (x_length,y_width,z_height)
-       :type size: tuple, numpy.array, list
-       :param size: size of the cuboid, triple, (x_length,y_width,z_height)
-       :type center: tuple, numpy.array, list
-       :param center: center of the cuboid, triple, (x,y,z)
-      """
     # suppose axis direction: x: to left; y: to inside; z: to upper
     # get the (left, outside, bottom) point
     o = [a - b / 2 for a, b in zip(center, size)]
