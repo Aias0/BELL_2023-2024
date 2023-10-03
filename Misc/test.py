@@ -1,6 +1,8 @@
-import keyboard, time, numpy
+import keyboard, time, numpy, Geometry3D, matplotlib
 
-a = (6, 5, 4)
-b = (1, 1, 1)
-print(a, b)
-print(tuple(numpy.add(a, b)))
+flight_path = Geometry3D.Cylinder(Geometry3D.Point([10, 10, 10]), 10, Geometry3D.Vector(200, 50, 50))
+
+r = Geometry3D.Renderer(backend='bell', args=[(472, 170, 200), 'avr'])
+r.add((flight_path, 'red', 1), 0)
+
+r.show()
