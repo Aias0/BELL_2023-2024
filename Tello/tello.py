@@ -1,7 +1,9 @@
-import cv2, time
+import cv2, time, sys
 import keyboard
 from threading import Thread
 from djitellopy import Tello
+sys.path.insert(1, 'Common_Data/')
+HAZARD_LIST = None
 from data import *
 
 tello = Tello()

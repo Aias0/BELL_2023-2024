@@ -5,6 +5,9 @@ from support import *
 import numpy as np
 import matplotlib.pyplot as plt
 import math, sys, os, logging, datetime, Geometry3D, time
+sys.path.insert(1, 'Common_Data/')
+HAZARD_LIST = None
+LOG_NUM = None
 from data import *
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 logging.basicConfig(filename=f'Logs\Log{LOG_NUM}_{datetime.date.isoformat(datetime.date.today())}_{datetime.datetime.now().strftime("%H-%M-%S")}.log', filemode='w', format='%(asctime)s-%(levelname)s-%(message)s', level=logging.WARNING)
@@ -32,6 +35,7 @@ class Bell_Tello(Tello):
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
         # Graphing Setup
+        self.r = Geometry3D.Renderer(backend='bell', args=[(472, 170, 200), 'bell'])  
         self.graph_thread = Thread(target=self.graph)
         self.graph_thread.start()
  
@@ -138,34 +142,13 @@ class Bell_Tello(Tello):
         
     # Graphing            
     def graph(self):
-        self.fig = plt.figure()
-
-        # Define plot size
-        ax = plt.axes(projection='3d')
-        ax.set_title('Field')
-        ax.set_xlim(0, self.field_length)
-        ax.set_ylim(0, self.field_width)
-        ax.set_zlim(0, self.field_height)
-        ax.set_aspect('equal')
-        # Move window and set view
-        ax.view_init(30, -130)
-        move_figure(self.fig, 1500, 200)
-    
         # Plot buildings
         for hazard in HAZARD_LIST:
-            if hazard[0] == 'c':
-                Xc,Yc,Zc = data_for_cylinder_along_z(hazard[1][0], hazard[1][1], hazard[2], hazard[3])
-                ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-        #Plot crossways
-        Xc,Zc,Yc = data_for_cylinder_along_z(404, 90, 5, 70+50, 50)
-        ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-        Zc,Yc,Xc = data_for_cylinder_along_z(44, 40, 5, 70+54, 54)
-        ax.plot_surface(Xc, Yc, Zc, alpha=0.5)
-        # Show plot
-        plt.show()
+            self.r.add((Geometry3D.Cylinder(Geometry3D.Point(list(hazard[0])), hazard[1], Geometry3D.Vector(list(hazard[2]))), 'green', 1))
+        self.r.show()
         
     def close_graph(self):
-        plt.close()
+        self.r.close()
     
     # Methods Deprecated    
     def move_pos_axis(self, pos: tuple, order: tuple = ('z', 'y', 'x')):

@@ -1,6 +1,9 @@
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
+import sys
+sys.path.insert(1, 'Common_Data/')
+HAZARD_LIST = None
 from data import *
 import matplotlib.pyplot as plt
 import Geometry3D

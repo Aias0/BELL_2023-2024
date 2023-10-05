@@ -1,9 +1,11 @@
-from bell_tello import Bell_Tello
-from data import *
 from djitellopy import Tello
 from threading import Thread
 import numpy as np
-import cv2, keyboard, time, logging
+import cv2, keyboard, time, logging, sys
+from bell_tello import Bell_Tello
+sys.path.insert(1, 'Common_Data/')
+HAZARD_LIST = None
+from data import *
 
 tello = Tello()
 tello.connect()

@@ -3,6 +3,8 @@ from djitellopy import Tello
 from threading import Thread
 import numpy as np
 from bell_tello import Bell_Tello
+sys.path.insert(1, 'Common_Data/')
+HAZARD_LIST = None
 from data import *
 from support import *
 
