@@ -35,9 +35,9 @@ class Bell_Tello(Tello):
         # Hazards: (pos, radius, height)
         self.axis_vals = {'x': 0, 'y': 1, 'z': 2}
         # Graphing Setup
-        self.r = Geometry3D.Renderer(backend='bell', args=[(472, 170, 200), 'bell'])  
-        self.graph_thread = Thread(target=self.graph)
-        self.graph_thread.start()
+        self.r = Geometry3D.Renderer(backend='bell', args=[(472, 170, 200), 'bell'])
+        #self.graph_thread = Thread(target=self.graph)
+        #self.graph_thread.start()
  
     def move_pos(self, pos: tuple, speed: int = 50):
         """ Move Tello to position in 3D space. Moves in a line. Rerouts flight path around hazards, will not move if flight path ends out of bounds. Speed is in cm/s
@@ -66,15 +66,17 @@ class Bell_Tello(Tello):
             for idx, axis in enumerate(relative_pos):
                 if abs(axis) > 500:
                     print('More than 500')
-                    relative_pos[idx] =- 500 * axis/abs(axis) * -1
-                    extra_pos[idx] = relative_pos[idx] - 500 * axis/abs(axis) * -1
+                    extra_pos[idx] = int(relative_pos[idx] - 500)
+                    relative_pos[idx] = int(500 * axis/abs(axis))
+            print(relative_pos, extra_pos)
             # Move to position
             print(f'Moving: {pos} | {relative_pos}')
             self.go_xyz_speed(int(relative_pos[0]), int(relative_pos[1]), int(relative_pos[2]), int(speed))
             self.current_pos = pos
             # Move leftover
             if max(extra_pos) != 0:
-                self.go_xyz_speed(extra_pos[0], extra_pos[1], extra_pos[2], speed)
+                print(f'Moving: {extra_pos} | {relative_pos}')
+                self.go_xyz_speed(int(extra_pos[0]), int(extra_pos[1]), int(extra_pos[2]), speed)
         else:
             # Pathfinding
             logging.info(f'({self.current_pos} -> {pos}) Path rerouted.')

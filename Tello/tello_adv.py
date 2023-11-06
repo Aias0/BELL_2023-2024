@@ -3,12 +3,11 @@ from djitellopy import Tello
 from threading import Thread
 import numpy as np
 from bell_tello import Bell_Tello
-sys.path.insert(1, 'Common_Data/')
-HAZARD_LIST = None
 from data import *
 from support import *
 
 start_time = time.time()
+#HAZARD_LIST = [(hazard[0], hazard[1], (hazard[2][0], hazard[2][1], hazard[2][2]*0.5)) for hazard in HAZARD_LIST]
 tello = Bell_Tello((472, 170, 200), (180, 116, 0), (231, 116, 40), HAZARD_LIST)
 tello.connect()
 print(f'Battery: {tello.get_battery()}%')
@@ -23,7 +22,7 @@ def CIC():
     while running:
         # Video
         video = tello.get_frame_read().frame
-        video = cv2.cvtColor(video, cv2.COLOR_BGR2RGB) 
+        video = cv2.cvtColor(video, cv2.COLOR_BGR2RGB)
         video = cv2.resize(video, (1440, 960))
         #Text Background
         text_bak = np.zeros_like(video, np.uint8)
@@ -46,17 +45,19 @@ def CIC():
             tello.emergency()
             print('Emergency stop')
             time.sleep(2)
-        if keyboard.is_pressed('q'):
+        if keyboard.is_pressed('y'):
             tello.streamoff()
-            tello.close_graph()
+            #tello.close_graph()
             exit()
         if keyboard.is_pressed('tab'):
             tello.toggle_video_direction()
         # Info
         if tello.get_battery() < 5:
             logging.critical(f'Battery dangerously low. {tello.get_battery()}%')
+            time.sleep(1)
         elif tello.get_battery() < 10:
             logging.warning(f'Battery low. {tello.get_battery()}%')
+            time.sleep(1)
         first_run = False
         
 # Create and run threads for input and video
@@ -66,10 +67,9 @@ CIC_feed.start()
 
 # Movement commands
 tello.takeoff()
-time.sleep(1)
-tello.current_pos[2] = tello.get_height()
-def test(*kwargs):
-    pass
+time.sleep(2)
+tello.land()
+""" tello.current_pos[2] = tello.get_height()
 tello.move_pos(
     (116, 39, 30), #Move to school building
 )
@@ -83,7 +83,7 @@ tello.set_video_direction(Tello.CAMERA_FORWARD)
 tello.land_ground_pad()
 auto_time_left = 30 - (start_time - time.time())
 if auto_time_left > 0:
-    time.sleep(auto_time_left) # Wait out rest of 30 sec auto period
+    time.sleep(auto_time_left) # Wait out rest of 30 sec auto period """
 
 # Going to scan red/blue screen
 tello.move_pos(
@@ -96,22 +96,29 @@ tello.move_pos(
 tello.rotate_clockwise(180)
 
 # Seeing tower screen is Red or Blue
+
 tower_scan = tello.get_frame_read().frame
 tower_scan = cv2.cvtColor(tower_scan, cv2.COLOR_RGB2BGR)
-# Processing Scan
-mask1 = cv2.inRange(tower_scan, (0,50,20), (5,255,255))
-mask2 = cv2.inRange(tower_scan, (175,50,20), (180,255,255))
-mask = cv2.bitwise_or(mask1, mask2)
-scan_red = False
-if cv2.countNonZero(mask) > 0:
-    scan_red = True
-# Showing Scan
-tower_color = cv2.resize(tower_scan, (360, 240))
-rb = {'Red': True, 'Blue': False}
-tower_color = cv2.putText(tower_color, f'Color: {rb[scan_red]}')
 cv2.imshow('Tower Scan', tower_scan)
 cv2.moveWindow('Tower Scan', 40,30)
-time.sleep(1)
+time.sleep(2)
+try:
+    # Processing Scan
+    mask1 = cv2.inRange(tower_scan, (0,50,20), (5,255,255))
+    mask2 = cv2.inRange(tower_scan, (175,50,20), (180,255,255))
+    mask = cv2.bitwise_or(mask1, mask2)
+    scan_red = False
+    if cv2.countNonZero(mask) > 0:
+        scan_red = True
+    # Showing Scan
+    tower_color = cv2.resize(tower_scan, (360, 240))
+    rb = {'Red': True, 'Blue': False}
+    tower_color = cv2.putText(tower_color, f'Color: {rb[scan_red]}')
+    cv2.imshow('Tower Scan', tower_scan)
+    cv2.moveWindow('Tower Scan', 40,30)
+    time.sleep(1)
+except:
+    pass
 tello.rotate_counter_clockwise(180)
 
 # Land at Firebuilding Pad
