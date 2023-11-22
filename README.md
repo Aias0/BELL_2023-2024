@@ -35,7 +35,7 @@ Bell Team One Git Repository.
 curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 python get-pip.py
 ```
-* Install libraries: djitellopy, numpy, matplotlib, Geometry3D
+* Install libraries: djitellopy, numpy, matplotlib, Geometry3D, etc.
 ```
 pip install 'library name'
 ```
