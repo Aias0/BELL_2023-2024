@@ -50,15 +50,6 @@ pip install 'library name'
 * Press Sync.
 
 #### Checking for/Getting changes
-* Press CTRL+Shift+P.
-* Type: git fetch.
 * Go to the Source Control tab on the left.
+* Click refresh button.
 * Press Sync.
-
-## Help
-
-Contact me if anything goes wrong.
-
-Phone: 214-577-0479
-
-Email: quentin.balestri@stu.hpisd.org
